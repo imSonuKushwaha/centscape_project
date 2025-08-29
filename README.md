@@ -13,24 +13,24 @@ Users can monitor progress, add items by pasting product URLs, and view saved it
 - npm or yarn
 - Expo CLI
 
-### Installation
+## Installation
 
-# Install dependencies
+### Install dependencies
 
 npm install
 
-# Run the development server
+### Run the development server
 
 npx expo start
 
-# You can then open the app in:
+### You can then open the app in:
 
 Expo Go (scan QR code)
 iOS simulator
 Android emulator
 Development build
 
-# Features
+### Features
 
 Dashboard: Track savings progress with goal and motivational text.
 Wishlist: Persistent wishlist stored via AsyncStorage.
@@ -40,7 +40,7 @@ Shared UI: Wishlist component reused across Dashboard and Wishlist.
 Navigation: Implemented with Expo Router.
 UI: Polished, consistent with design spec.
 
-# 🤖 AI Usage Disclosure
+### 🤖 AI Usage Disclosure
 
 AI assistance (ChatGPT) was used in the following ways:
 Code Generation: Initial scaffolding of useWishlist (Zustand + AsyncStorage).

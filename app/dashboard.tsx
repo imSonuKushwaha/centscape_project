@@ -1,7 +1,10 @@
+import WishlistItem from "@/components/WishlistItem";
+import { useWishlist } from "@/hooks/useWishlist";
+import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { useEffect } from "react";
 import {
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,24 +16,15 @@ export default function Dashboard() {
   const goal = 499.99;
   const saved = 125;
   const remaining = goal - saved;
-  const estimatedDays = 58; // hardcoded for now
+  const estimatedDays = 58;
 
-  const wishlist = [
-    {
-      id: "1",
-      brand: "Apple",
-      name: "Airpods Max- Midnight",
-      price: 499.99,
-      image: "https://via.placeholder.com/40",
-    },
-    {
-      id: "2",
-      brand: "Zara",
-      name: "Stretch Bandeau top",
-      price: 79.99,
-      image: "https://via.placeholder.com/40",
-    },
-  ];
+  const { items, loadItems } = useWishlist();
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  const previewItems = items.slice(0, 2);
 
   return (
     <View style={styles.container}>
@@ -41,8 +35,15 @@ export default function Dashboard() {
 
       {/* Progress card */}
       <View style={styles.progressCard}>
-        <Text style={styles.progressText}>You have saved ${saved}</Text>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressLabel}>Your progress</Text>
+          <Text style={styles.goalLabel}>Goal ${goal.toFixed(2)}</Text>
+        </View>
+
+        <Text style={styles.savedText}>You have saved ${saved}</Text>
+
         <ProgressBar saved={saved} goal={goal} />
+
         <View style={styles.remainingBox}>
           <Text style={styles.remainingText}>
             ${remaining.toFixed(2)} to go
@@ -56,23 +57,17 @@ export default function Dashboard() {
       </View>
 
       <FlatList
-        data={wishlist}
+        data={previewItems}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.itemRow}>
-            <Image source={{ uri: item.image }} style={styles.itemImage} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.itemBrand}>{item.brand}</Text>
-              <Text style={styles.itemName}>{item.name}</Text>
-            </View>
-            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <WishlistItem item={item} />}
         ListFooterComponent={
-          <Link href="/add-item" asChild>
+          <Link href="/wishlist" asChild>
             <TouchableOpacity style={styles.addRow}>
+              <View style={styles.addIcon}>
+                <Ionicons name="add" size={18} color="#fff" />
+              </View>
               <Text style={styles.addText}>
-                + Add items to your Centscape Wishlist
+                Add items to your Centscape Wishlist
               </Text>
             </TouchableOpacity>
           </Link>
@@ -80,18 +75,12 @@ export default function Dashboard() {
       />
 
       {/* Motivation text */}
-      <Text style={styles.motivation}>
-        Keep going! According to your spending habits you will reach your goal
-        of ${goal} in
-      </Text>
-      <Text style={styles.days}>{estimatedDays} DAYS!</Text>
-
-      {/* Bottom Nav (dummy for now) */}
-      <View style={styles.bottomNav}>
-        <View style={styles.navIcon} />
-        <View style={styles.navIcon} />
-        <View style={styles.navIcon} />
-        <View style={styles.navIcon} />
+      <View style={styles.motivationBox}>
+        <Text style={styles.motivation}>
+          Keep going! According to your spending habits you will reach your goal
+          of ${goal} in
+        </Text>
+        <Text style={styles.days}>{estimatedDays} DAYS!</Text>
       </View>
     </View>
   );
@@ -99,66 +88,99 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#E6F9E6", padding: 16 },
+
+  // Header
   headerBox: {
     alignSelf: "flex-start",
     backgroundColor: "#000",
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginBottom: 12,
-  },
-  header: { color: "#fff", fontWeight: "bold", fontSize: 18 },
-  progressCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     marginBottom: 16,
   },
-  progressText: { color: "green", fontWeight: "500", marginBottom: 8 },
+  header: { color: "#fff", fontWeight: "bold", fontSize: 20 },
+
+  progressCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
+  progressLabel: {
+    fontSize: 13,
+    color: "#888", // lighter gray
+  },
+
+  goalLabel: {
+    fontSize: 13,
+    color: "#555", // darker gray
+  },
+
+  savedText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#3CB371", // green like in design
+    marginBottom: 8,
+  },
+
   remainingBox: {
-    alignSelf: "flex-end",
+    position: "absolute",
+    bottom: -12,
+    right: 16,
     backgroundColor: "#000",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    marginTop: 6,
   },
-  remainingText: { color: "#fff", fontSize: 12 },
+
+  remainingText: {
+    color: "#3CB371", // green text inside black chip
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Wishlist section
   sectionHeader: {
+    alignSelf: "flex-start", // ✅ prevent full width
     backgroundColor: "#000",
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginBottom: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 12,
   },
-  sectionText: { color: "#fff", fontWeight: "bold" },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  itemImage: { width: 40, height: 40, marginRight: 10, borderRadius: 8 },
-  itemBrand: { fontWeight: "bold" },
-  itemName: { fontSize: 12, color: "#555" },
-  itemPrice: { fontWeight: "600" },
+  sectionText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+
   addRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
+    gap: 8,
   },
-  addText: { fontSize: 14, color: "#000" },
-  motivation: { textAlign: "center", marginTop: 20, fontSize: 14 },
+  addIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 100,
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addText: { fontSize: 14, color: "#000", fontWeight: "500" },
+
+  // Motivation text
+  motivationBox: { marginTop: 24, alignItems: "center" },
+  motivation: { textAlign: "center", fontSize: 14 },
   days: { textAlign: "center", fontSize: 18, fontWeight: "bold", marginTop: 6 },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 10,
-    marginTop: "auto",
-  },
-  navIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#333",
-    borderRadius: 10,
-  },
 });

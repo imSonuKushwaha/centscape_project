@@ -1,51 +1,94 @@
-import { View, Text, FlatList, Image, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import WishlistItem from "../components/WishlistItem"; // ✅ same UI as Dashboard
 import { useWishlist } from "../hooks/useWishlist";
-import { useEffect } from "react";
+import { fetchPreview } from "../services/api";
+import { normalizeUrl } from "../utils/normalizeUrl";
 
 export default function Wishlist() {
-  const { items, loadItems } = useWishlist();
+  const { items, loadItems, addItem } = useWishlist();
+  const [url, setUrl] = useState("");
 
   useEffect(() => {
     loadItems();
   }, []);
 
+  const handleFetch = async () => {
+    if (!url) return;
+    try {
+      const data = await fetchPreview(url);
+      await addItem({
+        id: Date.now().toString(),
+        title: data.title || "Untitled",
+        image: data.image || "https://via.placeholder.com/50",
+        price: data.price ? Number(data.price) : undefined,
+        source: data.siteName || new URL(data.sourceUrl).hostname,
+        createdAt: Date.now(),
+        normalizedUrl: normalizeUrl(data.sourceUrl),
+      });
+      setUrl("");
+    } catch {
+      alert("❌ Failed to fetch preview");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>MY WISHLIST</Text>
 
+      {/* Paste URL + Fetch */}
+      <View style={styles.addBox}>
+        <TextInput
+          value={url}
+          onChangeText={setUrl}
+          placeholder="Paste URL here"
+          style={styles.input}
+        />
+        <TouchableOpacity style={styles.fetchBtn} onPress={handleFetch}>
+          <Text style={styles.fetchText}>Fetch</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Wishlist list (reused UI from Dashboard) */}
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Image
-              source={{ uri: item.image || "https://via.placeholder.com/50" }}
-              style={styles.image}
-            />
-            <View style={styles.info}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text>{item.price || "N/A"}</Text>
-              <Text style={styles.source}>{item.source}</Text>
-            </View>
-          </View>
-        )}
+        renderItem={({ item }) => <WishlistItem item={item} />}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: "#E6F9E6" },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
-  card: {
+
+  // Add flow
+  addBox: {
     flexDirection: "row",
-    padding: 12,
-    backgroundColor: "#f2f2f2",
-    borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 12,
+    gap: 8,
   },
-  image: { width: 50, height: 50, borderRadius: 8 },
-  info: { marginLeft: 12 },
-  itemTitle: { fontSize: 16, fontWeight: "600" },
-  source: { fontSize: 12, color: "gray" },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: "#fff",
+  },
+  fetchBtn: {
+    backgroundColor: "#000",
+    borderRadius: 6,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+  },
+  fetchText: { color: "#fff", fontWeight: "600" },
 });
